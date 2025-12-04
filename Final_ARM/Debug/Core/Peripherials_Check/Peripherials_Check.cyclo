@@ -1,0 +1,13 @@
+../Core/Peripherials_Check/Peripherials_Check.h:74:20:Start_Time	1
+../Core/Peripherials_Check/Peripherials_Check.h:80:20:Stop_Time	1
+../Core/Peripherials_Check/Peripherials_Check.h:85:24:Measure_Time	1
+../Core/Peripherials_Check/Peripherials_Check.c:21:6:GetTimeAndDate	3
+../Core/Peripherials_Check/Peripherials_Check.c:42:12:ADC_Check	2
+../Core/Peripherials_Check/Peripherials_Check.c:60:6:ADC_Outcome	3
+../Core/Peripherials_Check/Peripherials_Check.c:86:6:HAL_ADC_ConvCpltCallback	2
+../Core/Peripherials_Check/Peripherials_Check.c:96:6:I2C_Test	5
+../Core/Peripherials_Check/Peripherials_Check.c:150:6:HAL_I2C_TxCpltCallback	2
+../Core/Peripherials_Check/Peripherials_Check.c:158:6:SPI_Test	5
+../Core/Peripherials_Check/Peripherials_Check.c:209:6:HAL_SPI_TxCpltCallback	2
+../Core/Peripherials_Check/Peripherials_Check.c:217:6:UART_Test	5
+../Core/Peripherials_Check/Peripherials_Check.c:266:6:HAL_UART_TxCpltCallback	2
