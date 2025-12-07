@@ -18,19 +18,24 @@
 
 #include "../Peripherials_Check/Peripherials_Check.h"
 
+/*
+ * The UDP receive callback which receives the packets,
+ * then we zero out the struct that holds the values for the received buffer,
+ * We make sure we add a null terminator just so we can successfully compare strings since we work
+ * with strings, then we call the functions inside of each peripherial, allocate the string to the
+ * buffer we would send back to the user
+ */
 
-static void UDP_Receive_Callback(void *arg, struct udp_pcb *udpcb, struct pbuf *p, const ip_addr_t *ip, uint16_t port)
+void udp_receive_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *ip, uint16_t port)
 {
-	if (p == NULL) return;
-
-	newTask NewTask;
 	int msg_len;
+	newTask NewTask;
 	struct pbuf *pb_tx;
 
-	/*
-	 * Starting with getting the packet, processing the data, comparing the strings into
-	 * commands and after that we send a response back to the client it came from
-	 */
+	if (p == NULL)
+	{
+		return;
+	}
 
 		memset(&NewTask, 0, sizeof(newTask));
 	    size_t copy_len = (p->tot_len < sizeof(NewTask.recv_buf) - 1) ? p->tot_len : sizeof(NewTask.recv_buf) - 1;
@@ -79,11 +84,7 @@ static void UDP_Receive_Callback(void *arg, struct udp_pcb *udpcb, struct pbuf *
 
 		pbuf_take(pb_tx, NewTask.result, msg_len);
 
-		udp_connect(udpcb, ip, port);
-
-		udp_send(udpcb, pb_tx);
-
-		udp_disconnect(udpcb);
+		udp_sendto(pcb, pb_tx, ip, port);
 
 		pbuf_free(pb_tx);
 
@@ -93,27 +94,42 @@ static void UDP_Receive_Callback(void *arg, struct udp_pcb *udpcb, struct pbuf *
 void Main_Server_init(void)
 {
 	newTask NewTask;
-	struct udp_pcb *udpcb;
+	struct udp_pcb *pcb;
 	int msg_len;
 	err_t err;
+	ip_addr_t MyIP;
 
-	udpcb = udp_new();
-	if(udpcb == NULL)
+	/*
+	 * Creating a new control block which handles all of the UDP operations
+	 */
+	pcb = udp_new();
+	if(pcb == NULL)
 	{
 		msg_len = snprintf(NewTask.msg,sizeof(NewTask.msg), "Error, couldn't create new UDP protocol block\n\r");
 		HAL_UART_Transmit(&huart3, (uint8_t *)NewTask.msg, msg_len, 500);
 		return;
 	}
 
-	err = udp_bind(udpcb, IP_ADDR_ANY, PORT_S);
+	/*
+	 * Setting manually an IP
+	 * and checking if the binding has been successful so we can start accepting the UDP packets
+	 */
+	IP_ADDR4(&MyIP,192,168,1,40);
+	err = udp_bind(pcb, &MyIP, PORT_S);
+
+
 	if (err == ERR_OK)
 	{
-		udp_recv(udpcb, UDP_Receive_Callback, NULL);
+		udp_recv(pcb, udp_receive_callback, NULL);
 	}
 	else
 	{
 		msg_len = snprintf(NewTask.msg,sizeof(NewTask.msg), "Error, couldn't bind the address and the port to the server...\n\r");
 		HAL_UART_Transmit(&huart3, (uint8_t *)NewTask.msg, msg_len, 500);
+		udp_remove(pcb);
 	}
 
 }
+
+
+
