@@ -11,13 +11,19 @@
 
 #include "../Main_Server/Main_Server.h"
 
+/*
+ * The status is the value of success or failure on each peripherial checked
+ * sTime and sDate used for RTC
+ */
 volatile uint8_t status;
 
 RTC_TimeTypeDef sTime;
 RTC_DateTypeDef sDate;
 
 
-
+/*
+ * Time and date
+ */
 void GetTimeAndDate(void)
 {
 	char msg[MSG_LEN];
@@ -39,6 +45,12 @@ void GetTimeAndDate(void)
 	HAL_UART_Transmit(&huart3, (uint8_t*)msg, msg_len, 500);
 }
 
+/*
+ * ADC Functions,
+ * ADC_Check = we check the ADC with polling, get the value, set the result to ADC_OK and we stop and return the result
+ * ADC_Result = calls ADC_Check and determines by the result if it was successful or not, either way it returns a
+ * value so it can be passed on to be sent to the user
+ */
 ADC_Result ADC_Check(void)
 {
 	ADC_Result Result;
@@ -59,20 +71,20 @@ ADC_Result ADC_Check(void)
 
 void ADC_Outcome(newTask *Task)
 {
-	ADC_Result result = ADC_Check();
+	ADC_Result Result = ADC_Check();
 	char msg[MSG_LEN];
 	int msg_len;
 	uint32_t known_val = Task->adc_known_val;
 
-	result.known_value = known_val;
+	Result.known_value = known_val;
 
-	if(result.status == ADC_ERROR)
+	if(Result.status == ADC_ERROR)
 	{
 		msg_len = snprintf(msg, sizeof(msg), "Operation has not been completed\r\n");
 		return;
 	}
 
-	if (result.measured == result.known_value)
+	if (Result.measured == Result.known_value)
 	{
 		msg_len = snprintf(Task->adc_result, sizeof(Task->adc_result) , "ADC OK: Expeceted:%lu Measured:%lu \r\n", result.known_value, result.measured);
 	}
@@ -91,7 +103,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 	}
 }
 
-
+/*
+ * I2C = we wait for the ADC result first, we enter a loop of 5 retries,
+ * we first set the volatile value to failure before we start to transmit it via DMA,
+ * we wait until the callback is updated from status_failure to success and if we do we break off the loop
+ * we return the date and time we return the ADC values and the test values of the peripherial
+ */
 
 void I2C_Test(void)
 {
@@ -155,6 +172,14 @@ void HAL_I2C_TxCpltCallback(I2C_HandleTypeDef *hi2c)
 	}
 }
 
+
+/*
+ * SPI = we wait for the ADC result first, we enter a loop of 5 retries,
+ * we first set the volatile value to failure before we start to transmit it via DMA,
+ * we wait until the callback is updated from status_failure to success and if we do we break off the loop
+ * we return the date and time we return the ADC values and the test values of the peripherial
+ */
+
 void SPI_Test(void)
 {
 	newTask Task;
@@ -213,6 +238,14 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 		status = Status_Success;
 	}
 }
+
+/*
+ * UART = we wait for the ADC result first, we enter a loop of 5 retries,
+ * we first set the volatile value to failure before we start to transmit it,
+ * we wait until the callback is updated from status_failure to success and if we do we break off the loop
+ * we return the date and time we return the ADC values and the test values of the peripherial
+ */
+
 
 void UART_Test(void)
 {

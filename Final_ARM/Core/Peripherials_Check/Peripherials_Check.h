@@ -62,13 +62,12 @@ typedef struct ADC_Res{
 
 extern volatile uint8_t status;
 
-/*
- * Functions + helper functions definitions, and declaring handlers
- */
 
 /*
- * Helper Functions for using TIM1 for measurements of each peripherial check
- * using inline instead of code-smelling the whole peripherial checkups
+ * Functions that used for counting each peripherial checkup time
+ * Start_Time = starts the counter
+ * Stop_Time = Stops the counter
+ * Measure_Time = measures the counter in between the start and stop functions
  */
 
 static inline void Start_Time(void)
